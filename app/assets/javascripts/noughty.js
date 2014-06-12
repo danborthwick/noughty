@@ -98,13 +98,14 @@ function computerMove(hashBefore)
 		type: "POST",
 		url: "move",
 		data: {
-			from_state: hashBefore,
-			to_state: hashAfter
+			from_state: hashBefore.hash,
+			to_state: hashAfter.hash,
+			transform: hashAfter.transform
 		}
 	}).done(function(response) {
 		console.log(response);
 		if (response.to_state >= 0) {
-			boardState = boardStateFromHash(response.to_state);
+			boardState = boardStateFromHash(response.to_state, response.transform);
 			redraw();
 		}
 		else {
@@ -120,12 +121,13 @@ function computerFirstMove()
 		type: "GET",
 		url: "move",
 		data: {
-			from_state: hashBefore
+			from_state: hashBefore.hash,
+			transform: hashBefore.transform
 		}
 	}).done(function(response) {
 		console.log(response);
 		if (response.to_state >= 0) {
-			boardState = boardStateFromHash(response.to_state);
+			boardState = boardStateFromHash(response.to_state, response.transform);
 			redraw();
 		}
 	});	
@@ -148,11 +150,20 @@ function computerRandomMove()
 
 function hashBoardState(state)
 {
-	var hash = 0x0fffffff;
+	var result = {
+			hash: 0x0fffffff,
+			transform: -1
+	};
+	
 	for (var transformIndex in cTransforms) {
-		hash = Math.min(hash, hashBoardStateWithTransform(state, cTransforms[transformIndex]));
+		var hashCandidate = hashBoardStateWithTransform(state, cTransforms[transformIndex]);
+		if (hashCandidate < result.hash) {
+			result.hash = hashCandidate;
+			result.transform = transformIndex;
+		}
 	}
-	return hash;
+	
+	return result;
 }
 
 function hashBoardStateWithTransform(state, transform)
@@ -172,14 +183,18 @@ function hashBoardStateWithTransform(state, transform)
 	return hash;
 }
 
-function boardStateFromHash(hash)
+function boardStateFromHash(hash, transform)
 {
+	var inverseTransform = cTransforms[cTransformInverseMap[transform]];
+	var point = { x: 0, y: 0 };
+
 	var state = newBoardState();
-	for (y = 0; y < 3; y++) {
-		for (x = 0; x < 3; x++) {
-			var maskPosition = bitMaskPositionForCell(x, y)
+	for (point.y = 0; point.y < 3; point.y++) {
+		for (point.x = 0; point.x < 3; point.x++) {
+			var maskPosition = bitMaskPositionForCell(point.x, point.y)
 			bitMask = (hash & (0x3 << maskPosition)) >> maskPosition;
-			state[y][x] = cellForBitMask(bitMask);
+			var pointTransformed = transformPoint(point, inverseTransform);
+			state[pointTransformed.y][pointTransformed.x] = cellForBitMask(bitMask);
 		}
 	}
 	return state;
@@ -208,28 +223,40 @@ function transformPoint(point, transform)
 	};
 }
 
-const cTransforms = [
-                     [	[ 1,  0,  0 ],		// Identity
-                     	[ 0,  1,  0 ] ],
+const cTransforms = {
+                     identity:	[	[ 1,  0,  0 ],
+                              	 	[ 0,  1,  0 ] ],
                      	
-                     [	[ 0, -1,  2 ],		// Rotate 90
-                     	[ 1,  0,  0 ] ],
+                     rotate90:	[	[ 0, -1,  2 ],
+                              	 	[ 1,  0,  0 ] ],
                      	
-                     [	[ -1, 0,  2 ],		// Rotate 180
-                     	[ 0, -1,  2 ] ],
+                     rotate180:	[	[ -1, 0,  2 ],
+                               	 	[ 0, -1,  2 ] ],
                      	
-                     [	[ 0,  1,  0 ],		// Rotate 270
-                     	[ -1, 0,  2 ] ],
+                     rotate270:	[	[ 0,  1,  0 ],
+                               	 	[ -1, 0,  2 ] ],
                      	
-                     [	[-1,  0,  2 ],		// Flip X
-                     	[ 0,  1,  0 ] ],
+                     flipX:		[	[-1,  0,  2 ],
+                           		 	[ 0,  1,  0 ] ],
                      	
-                     [	[ 1,  0,  0 ],		// Flip Y
-                     	[ 0, -1,  2 ] ],
+                     flipY:		[	[ 1,  0,  0 ],
+                           		 	[ 0, -1,  2 ] ],
                      	
-                     [	[ 0,  1,  0 ],		// Mirror diagonal 1
-                     	[ 1,  0,  0 ] ],
+                     diagonal1:	[	[ 0,  1,  0 ],
+                               	 	[ 1,  0,  0 ] ],
                      	
-                     [	[ 0, -1,  2 ],		// Mirror diagonal 2
-                     	[-1,  0,  2 ] ],
-                     ];
+                     diagonal2:	[	[ 0, -1,  2 ],
+                               	 	[-1,  0,  2 ] ],
+};
+
+const cTransformInverseMap = {
+		identity:	'identity',
+		rotate90:	'rotate270',
+		rotate180:	'rotate180',
+		rotate270:	'rotate90',
+		flipX:		'flipX',
+		flipY:		'flipY',
+		diagonal1:	'diagonal1',
+		diagonal2:	'diagonal2'
+};
+
