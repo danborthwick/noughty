@@ -1,5 +1,8 @@
 var boardState;
+var playerSide;
 
+const cellX = "x";
+const cellO = "o";
 const cBitMasks = {
 		" " : 0,
 		"x" : 1,
@@ -8,14 +11,25 @@ const cBitMasks = {
 
 $(document).ready(function() {
 	restart();
-	redraw();
 	$('.restart').click(restart);
 });
 
 function restart()
 {
 	boardState = newBoardState();
+	setupSides();
 	redraw();
+}
+
+function setupSides()
+{
+	var playerStarts = Math.random() < 0.5;
+	playerSide = playerStarts ? cellX : cellO;
+	$('.playerSide').html(playerSide);
+	$('.computerSide').html(playerStarts ? cellO : cellX);
+	if (!playerStarts) {
+		computerFirstMove();
+	}
 }
 
 function newBoardState()
@@ -27,7 +41,6 @@ function redraw()
 {
 	renderBoard($('.board'), boardState);
 }
-
 
 function renderBoard(board, state)
 {
@@ -54,17 +67,27 @@ function renderBoard(board, state)
 
 function cellClicked(event)
 {
-	var row = event.data.row;
-	var column = event.data.column;
-	console.log("Cell clicked: " + row + ", " + column);
+	var x = event.data.row;
+	var y = event.data.column;
+	playerMove(x, y);
+}
+
+function playerMove(x, y)
+{
+	console.log("Player: " + x + ", " + y);
 	
 	var hashBefore = hashBoardState(boardState);
-	boardState[row][column] = "x";
-	var hashAfter = hashBoardState(boardState);
-	console.log("Hash: " + hashBoardState(boardState));
+	boardState[x][y] = playerSide;
 	
 	redraw();
-	
+	computerMove(hashBefore);
+}
+
+function computerMove(hashBefore)
+{	
+	var hashAfter = hashBoardState(boardState);
+	console.log("Hash: " + hashBoardState(boardState));
+
 	$.ajax({
 		type: "POST",
 		url: "move",
@@ -79,6 +102,24 @@ function cellClicked(event)
 			redraw();
 		}
 	});
+}
+
+function computerFirstMove()
+{
+	var hashBefore = hashBoardState(boardState);
+	$.ajax({
+		type: "GET",
+		url: "move",
+		data: {
+			from_state: hashBefore
+		}
+	}).done(function(response) {
+		console.log(response);
+		if (response.to_state >= 0) {
+			boardState = boardStateFromHash(response.to_state);
+			redraw();
+		}
+	});	
 }
 
 function hashBoardState(state)

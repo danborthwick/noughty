@@ -4,8 +4,8 @@ protect_from_forgery :except => :create
 
   def index
     params.require(:from_state)
-    move = next_state(Integer(params[:from_state]))
-    render json: { to_state: 12345, count: move.length }, status: :ok
+    to_state = next_state(Integer(params[:from_state]))
+    render json: { to_state: to_state }, status: :ok
   end
   
   def create
