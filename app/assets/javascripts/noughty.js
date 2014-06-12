@@ -1,8 +1,11 @@
 var boardState;
 var playerSide;
+var computerSide;
 
-const cellX = "x";
-const cellO = "o";
+const cCellX = "x";
+const cCellO = "o";
+const cCellEmpty = " ";
+
 const cBitMasks = {
 		" " : 0,
 		"x" : 1,
@@ -24,9 +27,12 @@ function restart()
 function setupSides()
 {
 	var playerStarts = Math.random() < 0.5;
-	playerSide = playerStarts ? cellX : cellO;
+	playerSide = playerStarts ? cCellX : cCellO;
+	computerSide = playerStarts ? cCellO : cCellX;
+	
 	$('.playerSide').html(playerSide);
-	$('.computerSide').html(playerStarts ? cellO : cellX);
+	$('.computerSide').html(computerSide);
+	
 	if (!playerStarts) {
 		computerFirstMove();
 	}
@@ -34,7 +40,7 @@ function setupSides()
 
 function newBoardState()
 {
-	return [ [" ", " ", " "], [" ", " ", " "], [" ", " ", " "]];
+	return [ [cCellEmpty, cCellEmpty, cCellEmpty], [cCellEmpty, cCellEmpty, cCellEmpty], [cCellEmpty, cCellEmpty, cCellEmpty]];
 }
 
 function redraw()
@@ -50,7 +56,7 @@ function renderBoard(board, state)
 		for (var col=0; col<3; col++) {
 			var cellType = state[row][col];
 			var cellContents = cellType;
-			if (cellType == " ") {
+			if (cellType == cCellEmpty) {
 				cellContents = $('<a> </a>').click({ row: row, column: col }, cellClicked);
 			}
 			pre.append(cellContents);
@@ -101,6 +107,9 @@ function computerMove(hashBefore)
 			boardState = boardStateFromHash(response.to_state);
 			redraw();
 		}
+		else {
+			computerRandomMove();
+		}
 	});
 }
 
@@ -121,6 +130,21 @@ function computerFirstMove()
 		}
 	});	
 }
+
+function computerRandomMove()
+{
+	while (true)
+	{
+		var x = Math.floor(Math.random() * 3);
+		var y = Math.floor(Math.random() * 3);
+		if (boardState[y][x] == cCellEmpty) {
+			boardState[y][x] = computerSide;
+			break;
+		}
+	}
+	redraw();
+}
+
 
 function hashBoardState(state)
 {
@@ -173,7 +197,7 @@ function cellForBitMask(mask)
 			return cell;
 		}
 	}
-	return " ";
+	return cCellEmpty;
 }
 
 function transformPoint(point, transform)
