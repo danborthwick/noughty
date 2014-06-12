@@ -46,11 +46,24 @@ function cellClicked(event)
 	var row = event.data.row;
 	var column = event.data.column;
 	console.log("Cell clicked: " + row + ", " + column);
-
+	
+	var hashBefore = hashBoardState(boardState);
 	boardState[row][column] = "x";
+	var hashAfter = hashBoardState(boardState);
 	console.log("Hash: " + hashBoardState(boardState));
 	
 	redraw();
+	
+	$.ajax({
+		type: "POST",
+		url: "move",
+		data: {
+			from_state: hashBefore,
+			to_state: hashAfter
+		}
+	}).done(function(response) {
+		console.log(response);
+	});
 }
 
 function hashBoardState(state)
