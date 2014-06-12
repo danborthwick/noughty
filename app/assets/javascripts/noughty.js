@@ -1,7 +1,22 @@
+var boardState;
+
 $(document).ready(function() {
-	var s = [ "x o", "   ", "oox"];
-	renderBoard($('#board'), s);
+	restart();
+	redraw();
+	$('.restart').click(restart);
 });
+
+function restart()
+{
+	boardState = [ [" ", " ", " "], [" ", " ", " "], [" ", " ", " "]];
+	redraw();
+}
+
+function redraw()
+{
+	renderBoard($('.board'), boardState);
+}
+
 
 function renderBoard(board, state)
 {
@@ -28,5 +43,10 @@ function renderBoard(board, state)
 
 function cellClicked(event)
 {
-	console.log("Cell clicked: " + event.data.row + ", " + event.data.column);
+	var row = event.data.row;
+	var column = event.data.column;
+	console.log("Cell clicked: " + row + ", " + column);
+	
+	boardState[row][column] = "x";
+	redraw();
 }
