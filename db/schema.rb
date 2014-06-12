@@ -11,16 +11,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140612102107) do
+ActiveRecord::Schema.define(version: 20140612164652) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "moves", force: true do |t|
-    t.integer  "from"
-    t.integer  "to"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.integer "from_state"
+    t.integer "to_state"
+    t.integer "count",      default: 1
   end
 
 end

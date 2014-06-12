@@ -1,6 +1,7 @@
 Noughty::Application.routes.draw do
   
   root 'game#index'
+  resources :move
   
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

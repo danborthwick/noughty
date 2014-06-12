@@ -1,10 +1,9 @@
 class CreateMoves < ActiveRecord::Migration
   def change
     create_table :moves do |t|
-      t.integer :from
-      t.integer :to
-
-      t.timestamps
+      t.integer :from_state
+      t.integer :to_state
+      t.integer :count
     end
   end
 end
