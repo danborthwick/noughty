@@ -1,5 +1,11 @@
 var boardState;
 
+const cBitMasks = {
+		" " : 0,
+		"x" : 1,
+		"o" : 2,
+}
+
 $(document).ready(function() {
 	restart();
 	redraw();
@@ -8,8 +14,13 @@ $(document).ready(function() {
 
 function restart()
 {
-	boardState = [ [" ", " ", " "], [" ", " ", " "], [" ", " ", " "]];
+	boardState = newBoardState();
 	redraw();
+}
+
+function newBoardState()
+{
+	return [ [" ", " ", " "], [" ", " ", " "], [" ", " ", " "]];
 }
 
 function redraw()
@@ -63,6 +74,10 @@ function cellClicked(event)
 		}
 	}).done(function(response) {
 		console.log(response);
+		if (response.to_state >= 0) {
+			boardState = boardStateFromHash(response.to_state);
+			redraw();
+		}
 	});
 }
 
@@ -84,18 +99,40 @@ function hashBoardStateWithTransform(state, transform)
 		for (point.x = 0; point.x < 3; point.x++) {
 			var pointTransformed = transformPoint(point, transform);
 			var cellValue = state[pointTransformed.y][pointTransformed.x];
-			const bitMasks = {
-					" " : 0,
-					"x" : 1,
-					"o" : 2,
-			}
-			var maskPosition = (3 * point.y) + point.x;
-			var bitMask = bitMasks[cellValue] << (2 * maskPosition);
+			var bitMask = cBitMasks[cellValue] << bitMaskPositionForCell(point.x, point.y);
 			hash |= bitMask;
 		}
 	}
 	
 	return hash;
+}
+
+function boardStateFromHash(hash)
+{
+	var state = newBoardState();
+	for (y = 0; y < 3; y++) {
+		for (x = 0; x < 3; x++) {
+			var maskPosition = bitMaskPositionForCell(x, y)
+			bitMask = (hash & (0x3 << maskPosition)) >> maskPosition;
+			state[y][x] = cellForBitMask(bitMask);
+		}
+	}
+	return state;
+}
+
+function bitMaskPositionForCell(x, y)
+{
+	return ((3 * y) + x) * 2;
+}
+
+function cellForBitMask(mask)
+{
+	for (var cell in cBitMasks) {
+		if (cBitMasks[cell] == mask) {
+			return cell;
+		}
+	}
+	return " ";
 }
 
 function transformPoint(point, transform)
