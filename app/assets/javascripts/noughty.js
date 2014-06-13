@@ -1,7 +1,8 @@
 var boardState;
 var playerSide;
 var computerSide;
-var debug = true;
+var winState = null;
+var debug = false;
 
 const cCellX = "x";
 const cCellO = "o";
@@ -21,8 +22,11 @@ $(document).ready(function() {
 function restart()
 {
 	boardState = newBoardState();
+	winState = null;
+	showMessage("");
+	console.log("New Game ------------------------------");
 	setupSides();
-	redraw();
+	update();
 }
 
 function setupSides()
@@ -46,12 +50,16 @@ function newBoardState()
 	         [cCellEmpty, cCellEmpty, cCellEmpty]];
 }
 
-function redraw()
+function update()
 {
-	renderBoard($('.board'), boardState);
+	winState = findWinner(boardState);
+	if (winState) {
+		showMessage(winState);
+	}
+	renderBoard($('.board'), boardState, (winState == null));
 }
 
-function renderBoard(board, state)
+function renderBoard(board, state, interactive)
 {
 	board.empty();
 	var pre = $("<pre>");
@@ -60,7 +68,10 @@ function renderBoard(board, state)
 			var cellType = state[row][col];
 			var cellContents = cellType;
 			if (cellType == cCellEmpty) {
-				cellContents = $('<a> </a>').click({ row: row, column: col }, cellClicked);
+				cellContents = $('<a> </a>');
+				if (interactive) {
+					cellContents.click({ row: row, column: col }, cellClicked);
+				}
 			}
 			pre.append(cellContents);
 			if (col < 2) {
@@ -81,6 +92,8 @@ function cellClicked(event)
 	playerMove(x, y);
 }
 
+//-------------- Gameplay -------------------------------
+
 function playerMove(x, y)
 {
 	console.log("Player: " + x + ", " + y);
@@ -88,8 +101,11 @@ function playerMove(x, y)
 	var hashBefore = hashBoardState(boardState);
 	boardState[x][y] = playerSide;
 	
-	redraw();
-	computerMove(hashBefore);
+	update();
+	
+	if (winState == null) {
+		computerMove(hashBefore);	
+	}
 }
 
 function computerMove(hashBefore)
@@ -109,9 +125,11 @@ function computerMove(hashBefore)
 		console.log(response);
 		if (response.to_state >= 0) {
 			boardState = boardStateFromHash(response.to_state, response.transform);
-			redraw();
+			showMessage("Computer understands");
+			update();
 		}
 		else {
+			showMessage("Computer guessed");
 			computerRandomMove();
 		}
 	});
@@ -131,7 +149,7 @@ function computerFirstMove()
 		console.log(response);
 		if (response.to_state >= 0) {
 			boardState = boardStateFromHash(response.to_state, response.transform);
-			redraw();
+			update();
 		}
 		else {
 			computerRandomMove();
@@ -151,9 +169,73 @@ function computerRandomMove()
 			break;
 		}
 	}
-	redraw();
+	update();
 }
 
+//-------------- Win condition -------------------------------
+
+function findWinner(state)
+{
+	const cWinLines = [
+	                   // Horizontals
+	                   { start: 0, step: 1 },
+	                   { start: 3, step: 1 },
+	                   { start: 6, step: 1 },
+	                   // Verticals
+	                   { start: 0, step: 3 },
+	                   { start: 1, step: 3 },
+	                   { start: 2, step: 3 },
+	                   // Diagonals
+	                   { start: 0, step: 4 },
+	                   { start: 2, step: 2 }
+	                   ];
+	
+	var winner = null;
+	for (var winLineIndex in cWinLines) {
+		winner = findWinnerOnLine(cWinLines[winLineIndex], state);
+		if (winner != null) {
+			break;
+		}
+	}
+	if ((winner == null) && boardIsFull(state)) {
+		winner = "Drawn game";
+	}
+	return winner;
+}
+
+function findWinnerOnLine(line, state)
+{
+	if (lineMatches(line, playerSide, state)) {
+		return "Player wins!";
+	}
+	else if (lineMatches(line, computerSide, state)) {
+		return "Computer wins!"
+	}
+	return null;
+}
+
+function lineMatches(line, cellContent, state) 
+{
+	var result = true;
+	for (var i=0; i < 3; i++) {
+		var cellIndex = line.start + (line.step * i);
+		result &= (state[Math.floor(cellIndex / 3)][cellIndex % 3] == cellContent);
+	}
+	return result;
+}
+
+function boardIsFull(state)
+{
+	var isFull = true;
+	for (var y=0; y<3; y++) {
+		for (var x=0; x<3; x++) {
+			isFull &= (state[y][x] != cCellEmpty); 
+		}
+	}
+	return isFull;
+}
+
+//-------------- Hashing -------------------------------
 
 function hashBoardState(state)
 {
@@ -222,6 +304,8 @@ function cellForBitMask(mask)
 	return cCellEmpty;
 }
 
+//-------------- Transforms -------------------------------
+
 function transformPoint(point, transform)
 {
 	return {
@@ -283,3 +367,7 @@ const cTransformInverseMap = {
 		diagonal2:	'diagonal2'
 };
 
+function showMessage(message)
+{
+	$(".message").text(message);
+}
