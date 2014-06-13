@@ -1,6 +1,7 @@
 var boardState;
 var playerSide;
 var computerSide;
+var debug = true;
 
 const cCellX = "x";
 const cCellO = "o";
@@ -26,7 +27,7 @@ function restart()
 
 function setupSides()
 {
-	var playerStarts = Math.random() < 0.5;
+	var playerStarts = debug ? false : Math.random() < 0.5;
 	playerSide = playerStarts ? cCellX : cCellO;
 	computerSide = playerStarts ? cCellO : cCellX;
 	
@@ -40,7 +41,9 @@ function setupSides()
 
 function newBoardState()
 {
-	return [ [cCellEmpty, cCellEmpty, cCellEmpty], [cCellEmpty, cCellEmpty, cCellEmpty], [cCellEmpty, cCellEmpty, cCellEmpty]];
+	return [ [cCellEmpty, cCellEmpty, cCellEmpty], 
+	         [cCellEmpty, cCellEmpty, cCellEmpty], 
+	         [cCellEmpty, cCellEmpty, cCellEmpty]];
 }
 
 function redraw()
@@ -130,11 +133,15 @@ function computerFirstMove()
 			boardState = boardStateFromHash(response.to_state, response.transform);
 			redraw();
 		}
+		else {
+			computerRandomMove();
+		}
 	});	
 }
 
 function computerRandomMove()
 {
+	console.log("Random move");
 	while (true)
 	{
 		var x = Math.floor(Math.random() * 3);
@@ -225,7 +232,11 @@ function transformPoint(point, transform)
 
 function randomTransformId()
 {
-	var randomIndex = Math.floor(Math.random() * 9);
+	if (debug) {
+		return 'rotate270';
+	}
+	var randomIndex = Math.floor(Math.random() * 8);
+	console.log("randomIndex: " + randomIndex);
 	var transformIndex = 0;
 	for (var transformId in cTransforms) {
 		if (transformIndex == randomIndex) {
