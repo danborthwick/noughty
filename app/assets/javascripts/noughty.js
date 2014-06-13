@@ -122,7 +122,7 @@ function computerFirstMove()
 		url: "move",
 		data: {
 			from_state: hashBefore.hash,
-			transform: hashBefore.transform
+			transform: randomTransformId()
 		}
 	}).done(function(response) {
 		console.log(response);
@@ -221,6 +221,18 @@ function transformPoint(point, transform)
 		x : (point.x * transform[0][0]) + (point.y * transform[0][1]) + transform[0][2],
 		y : (point.x * transform[1][0]) + (point.y * transform[1][1]) + transform[1][2]
 	};
+}
+
+function randomTransformId()
+{
+	var randomIndex = Math.floor(Math.random() * 9);
+	var transformIndex = 0;
+	for (var transformId in cTransforms) {
+		if (transformIndex == randomIndex) {
+			return transformId;
+		}
+		transformIndex++;
+	}
 }
 
 const cTransforms = {
