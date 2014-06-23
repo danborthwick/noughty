@@ -124,7 +124,7 @@ function computerMove(hashBefore)
 	}).done(function(response) {
 		console.log(response);
 		if (response.to_state >= 0) {
-			boardState = boardStateFromHash(response.to_state, response.transform);
+			boardState = stateAfterMoveWithHash(response.to_state, boardState);
 			showMessage("Computer understands");
 			update();
 		}
@@ -148,7 +148,7 @@ function computerFirstMove()
 	}).done(function(response) {
 		console.log(response);
 		if (response.to_state >= 0) {
-			boardState = boardStateFromHash(response.to_state, response.transform);
+			boardState = stateAfterMoveWithHash(response.to_state, boardState);
 			update();
 		}
 		else {
@@ -272,9 +272,23 @@ function hashBoardStateWithTransform(state, transform)
 	return hash;
 }
 
+function stateAfterMoveWithHash(hash, previousState)
+{
+	var nextState = null;
+	
+	for (var transformId in cTransforms) {
+		var candidateState = boardStateFromHash(hash, cTransforms[transformId]);
+		if (isSuccessorState(previousState, candidateState)) {
+			nextState = candidateState;
+			break;
+		}
+	}
+	
+	return nextState;
+}
+
 function boardStateFromHash(hash, transform)
 {
-	var inverseTransform = cTransforms[cTransformInverseMap[transform]];
 	var point = { x: 0, y: 0 };
 
 	var state = newBoardState();
@@ -282,11 +296,34 @@ function boardStateFromHash(hash, transform)
 		for (point.x = 0; point.x < 3; point.x++) {
 			var maskPosition = bitMaskPositionForCell(point.x, point.y)
 			bitMask = (hash & (0x3 << maskPosition)) >> maskPosition;
-			var pointTransformed = transformPoint(point, inverseTransform);
+			var pointTransformed = transformPoint(point, transform);
 			state[pointTransformed.y][pointTransformed.x] = cellForBitMask(bitMask);
 		}
 	}
 	return state;
+}
+
+function isSuccessorState(firstState, secondState)
+{
+	var movesFound = 0;
+	var result = true;
+
+	for (var y = 0; y < 3; y++) {
+		for (var x = 0; x < 3; x++) {
+			if (firstState[y][x] != secondState[y][x]) {
+				if (firstState[y][x] == cCellEmpty) {
+					movesFound++;
+				}
+				else {
+					result = false;
+					break;
+				}
+			}
+		}
+	}
+	
+	result &= (movesFound == 1);
+	return result;
 }
 
 function bitMaskPositionForCell(x, y)
@@ -354,17 +391,6 @@ const cTransforms = {
                      	
                      diagonal2:	[	[ 0, -1,  2 ],
                                	 	[-1,  0,  2 ] ],
-};
-
-const cTransformInverseMap = {
-		identity:	'identity',
-		rotate90:	'rotate270',
-		rotate180:	'rotate180',
-		rotate270:	'rotate90',
-		flipX:		'flipX',
-		flipY:		'flipY',
-		diagonal1:	'diagonal1',
-		diagonal2:	'diagonal2'
 };
 
 function showMessage(message)
