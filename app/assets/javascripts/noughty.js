@@ -17,6 +17,7 @@ const cBitMasks = {
 $(document).ready(function() {
 	restart();
 	$('.restart').click(restart);
+	$(document).keypress(keyPressed);
 });
 
 function restart()
@@ -27,6 +28,13 @@ function restart()
 	console.log("New Game ------------------------------");
 	setupSides();
 	update();
+}
+
+function keyPressed(event)
+{
+	if (event.charCode == "r".charCodeAt(0)) {
+		restart();
+	}
 }
 
 function setupSides()
@@ -102,10 +110,8 @@ function playerMove(x, y)
 	boardState[x][y] = playerSide;
 	
 	update();
-	
-	if (winState == null) {
-		computerMove(hashBefore);	
-	}
+
+	computerMove(hashBefore);	
 }
 
 function computerMove(hashBefore)
@@ -123,14 +129,16 @@ function computerMove(hashBefore)
 		}
 	}).done(function(response) {
 		console.log(response);
-		if (response.to_state >= 0) {
-			boardState = stateAfterMoveWithHash(response.to_state, boardState);
-			showMessage("Computer understands");
-			update();
-		}
-		else {
-			showMessage("Computer guessed");
-			computerRandomMove();
+		if (winState == null) {
+			if (response.to_state >= 0) {
+				boardState = stateAfterMoveWithHash(response.to_state, boardState);
+				showMessage("Computer understands");
+				update();
+			}
+			else {
+				showMessage("Computer guessed");
+				computerRandomMove();
+			}			
 		}
 	});
 }
@@ -395,5 +403,6 @@ const cTransforms = {
 
 function showMessage(message)
 {
-	$(".message").text(message);
+	message = message || "&nbsp;";
+	$(".message").html(message);
 }
