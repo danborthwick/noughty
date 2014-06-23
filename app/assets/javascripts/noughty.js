@@ -2,6 +2,7 @@ var boardState;
 var playerSide;
 var computerSide;
 var winState = null;
+var isPlayerMove = false;
 var debug = false;
 
 const cCellX = "x";
@@ -39,14 +40,14 @@ function keyPressed(event)
 
 function setupSides()
 {
-	var playerStarts = debug ? false : Math.random() < 0.5;
-	playerSide = playerStarts ? cCellX : cCellO;
-	computerSide = playerStarts ? cCellO : cCellX;
+	isPlayerMove = debug ? false : Math.random() < 0.5;
+	playerSide = isPlayerMove ? cCellX : cCellO;
+	computerSide = isPlayerMove ? cCellO : cCellX;
 	
 	$('.playerSide').html(playerSide);
 	$('.computerSide').html(computerSide);
 	
-	if (!playerStarts) {
+	if (!isPlayerMove) {
 		computerFirstMove();
 	}
 }
@@ -63,8 +64,9 @@ function update()
 	winState = findWinner(boardState);
 	if (winState) {
 		showMessage(winState);
+		isPlayerMove = false;
 	}
-	renderBoard($('.board'), boardState, (winState == null));
+	renderBoard($('.board'), boardState, isPlayerMove);
 }
 
 function renderBoard(board, state, interactive)
@@ -76,7 +78,7 @@ function renderBoard(board, state, interactive)
 			var cellType = state[row][col];
 			var cellContents = cellType;
 			if (cellType == cCellEmpty) {
-				cellContents = $('<a> </a>');
+				cellContents = $('<a class="boardCell"> </a>');
 				if (interactive) {
 					cellContents.click({ row: row, column: col }, cellClicked);
 				}
@@ -108,6 +110,7 @@ function playerMove(x, y)
 	
 	var hashBefore = hashBoardState(boardState);
 	boardState[x][y] = playerSide;
+	isPlayerMove = false;
 	
 	update();
 
@@ -132,13 +135,14 @@ function computerMove(hashBefore)
 		if (winState == null) {
 			if (response.to_state >= 0) {
 				boardState = stateAfterMoveWithHash(response.to_state, boardState);
-				showMessage("Computer understands");
+				isPlayerMove = true;
+				showMessage("Noughty understands");
 				update();
 			}
 			else {
-				showMessage("Computer guessed");
+				showMessage("Noughty guessed");
 				computerRandomMove();
-			}			
+			}
 		}
 	});
 }
@@ -157,6 +161,7 @@ function computerFirstMove()
 		console.log(response);
 		if (response.to_state >= 0) {
 			boardState = stateAfterMoveWithHash(response.to_state, boardState);
+			isPlayerMove = true;
 			update();
 		}
 		else {
@@ -177,6 +182,7 @@ function computerRandomMove()
 			break;
 		}
 	}
+	isPlayerMove = true;
 	update();
 }
 
@@ -217,7 +223,7 @@ function findWinnerOnLine(line, state)
 		return "Player wins!";
 	}
 	else if (lineMatches(line, computerSide, state)) {
-		return "Computer wins!"
+		return "Noughty wins!"
 	}
 	return null;
 }
