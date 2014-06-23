@@ -3,20 +3,28 @@
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
 body {
+  font-size: 24px;
   padding: 30px;
+  font-family: monospace;
+  color: #808080;
 }
 
 pre {
     font-size: 50px;
     font-family: monospace;
+    color: #202020;
 }
 
-.computerSide {
+.side {
     font-size: 50px;
     font-family: monospace;
+    color: #202020;
 }
 
-.playerSide {
-    font-size: 50px;
-    font-family: monospace;
+.x {
+  color: #702020;
+}
+
+.o {
+  color: #207020;
 }

@@ -44,8 +44,8 @@ function setupSides()
 	playerSide = isPlayerMove ? cCellX : cCellO;
 	computerSide = isPlayerMove ? cCellO : cCellX;
 	
-	$('.playerSide').html(playerSide);
-	$('.computerSide').html(computerSide);
+	$('.playerSide').html(playerSide).addClass(playerSide);
+	$('.computerSide').html(computerSide).addClass(computerSide);
 	
 	if (!isPlayerMove) {
 		computerFirstMove();
@@ -76,12 +76,9 @@ function renderBoard(board, state, interactive)
 	for (var row=0; row<3; row++) {
 		for (var col=0; col<3; col++) {
 			var cellType = state[row][col];
-			var cellContents = cellType;
-			if (cellType == cCellEmpty) {
-				cellContents = $('<a class="boardCell"> </a>');
-				if (interactive) {
+			var cellContents = $('<a class="boardCell ' + cellType + '">' + cellType + '</a>');
+			if ((cellType == cCellEmpty) && interactive) {
 					cellContents.click({ row: row, column: col }, cellClicked);
-				}
 			}
 			pre.append(cellContents);
 			if (col < 2) {
@@ -136,11 +133,11 @@ function computerMove(hashBefore)
 			if (response.to_state >= 0) {
 				boardState = stateAfterMoveWithHash(response.to_state, boardState);
 				isPlayerMove = true;
-				showMessage("Noughty understands");
+				showMessage("Noughty understands Xo)");
 				update();
 			}
 			else {
-				showMessage("Noughty guessed");
+				showMessage("Noughty guessed XoS");
 				computerRandomMove();
 			}
 		}
@@ -223,7 +220,7 @@ function findWinnerOnLine(line, state)
 		return "Player wins!";
 	}
 	else if (lineMatches(line, computerSide, state)) {
-		return "Noughty wins!"
+		return "Noughty wins! X'oO"
 	}
 	return null;
 }
