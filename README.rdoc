@@ -1,28 +1,7 @@
-== README
+Noughty was a one day experiment to create a learning, human-like noughts and crosses AI.
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Try Noughty at noughty.herokuapp.com
 
-Things you may want to cover:
+Please feel free to use this code in any way you like.
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
-
-
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+By Dan Borthwick, danborthwick@hotmail.com. (Yeah Hotmail, wot?) 
